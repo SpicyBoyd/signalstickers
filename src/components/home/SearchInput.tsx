@@ -1,44 +1,18 @@
 import debounceFn from 'debounce-fn';
-import {cx} from 'linaria';
 import {styled} from 'linaria/react';
 import React from 'react';
-// @ts-ignore (No type definitions exist for this package.)
-import Octicon from 'react-octicon';
 import {HashLink} from 'react-router-hash-link';
-import useBreakpoint from 'use-breakpoint';
+import {BsSearch, BsX} from 'react-icons/bs';
+import {FaInfoCircle} from 'react-icons/fa';
 
-import {SIGNAL_BLUE} from 'etc/colors';
-import {BOOTSTRAP_BREAKPOINTS} from 'etc/constants';
 import StickersContext from 'contexts/StickersContext';
-import {bp} from 'lib/utils';
 
 
 // ----- Styles ----------------------------------------------------------------
 
 const SearchInput = styled.div`
-  & .octicon-search {
-    color: ${SIGNAL_BLUE};
-    font-size: 14px;
-    position: relative;
-    left: -1px;
-    font-size: 24px;
-  }
-
-  & .input-group-lg {
-    & .octicon-search,
-    & .octicon-x {
-      font-size: 24px;
-    }
-
-    & input {
-      font-weight: 400;
-    }
-  }
-
-  & .badge-signal {
-    color: ${SIGNAL_BLUE};
-    border: 1px solid ${SIGNAL_BLUE};
-    margin-right: 5px;
+  & svg.x-icon {
+    transform: scale(1.5);
   }
 
   & input::placeholder {
@@ -57,26 +31,22 @@ const SearchHelp = styled.div`
   opacity: 0;
   pointer-events: none;
   position: absolute;
-  right: 54px;
+  right: 70px;
   top: 0;
   transition: opacity 0.2s ease-in-out;
   z-index: 3;
 
   & a {
-    opacity: 0.6;
+    opacity: 0.4;
     transition: opacity 0.15s ease-in-out;
 
     &:hover {
-      opacity: 1;
+      opacity: 0.6;
     }
   }
 
-  & .octicon {
-    font-size: 18px;
-  }
-
-  @media ${bp('md')} {
-    right: 76px;
+  & .icon {
+    font-size: 16px;
   }
 `;
 
@@ -87,7 +57,6 @@ const SearchInputComponent: React.FunctionComponent = () => {
   const {allStickerPacks, searcher, searchQuery, setSearchQuery} = React.useContext(StickersContext);
   const [searchQueryInputValue, setSearchQueryInputValue] = React.useState('');
   const searchHelpRef = React.useRef<HTMLDivElement>(null);
-  const {breakpoint} = useBreakpoint(BOOTSTRAP_BREAKPOINTS, 'xl');
   const suggestedTags = ['cute', 'privacy', 'meme', 'for children'];
 
 
@@ -98,6 +67,32 @@ const SearchInputComponent: React.FunctionComponent = () => {
   const debouncedSetSearchQuery = debounceFn((value: string) => {
     setSearchQuery(value);
   }, {wait: 250});
+
+
+  /**
+   * [Effect] Input state -> debounced context value.
+   */
+  React.useEffect(() => {
+    debouncedSetSearchQuery.cancel();
+    debouncedSetSearchQuery(searchQueryInputValue);
+
+    return () => {
+      debouncedSetSearchQuery.cancel();
+    };
+  }, [
+    debouncedSetSearchQuery,
+    searchQueryInputValue
+  ]);
+
+
+  /**
+   * [Effect] Sync input value to state.
+   */
+  React.useEffect(() => {
+    if (searchQuery) {
+      setSearchQueryInputValue(searchQuery);
+    }
+  }, [searchQuery]);
 
 
   /**
@@ -214,7 +209,7 @@ const SearchInputComponent: React.FunctionComponent = () => {
     <button
       type="button"
       key={tag}
-      className="badge badge-signal"
+      className="badge badge-light border border-primary text-primary mr-1"
       onClick={onTagClick}
     >
       {tag}
@@ -228,10 +223,10 @@ const SearchInputComponent: React.FunctionComponent = () => {
 
   return (
     <SearchInput className="form-group mb-4 mb-md-5">
-      <div className={cx('input-group', ['md', 'lg', 'xl'].includes(breakpoint) && 'input-group-lg')}>
+      <div className="input-group input-group-lg mb-1">
         <div className="input-group-prepend">
-          <span className="input-group-text">
-            <Octicon name="search" />
+          <span className="input-group-text text-primary">
+            <BsSearch />
           </span>
         </div>
         <input
@@ -245,26 +240,30 @@ const SearchInputComponent: React.FunctionComponent = () => {
           placeholder={placeholder}
           title="Search"
           aria-label="search"
-          autoComplete="false"
+          autoComplete="off"
+          autoCapitalize="off"
+          autoCorrect="off"
           spellCheck="false"
         />
+        <SearchHelp ref={searchHelpRef}>
+          <HashLink to="/about#searching" title="Search Help">
+            <FaInfoCircle className="text-muted" />
+          </HashLink>
+        </SearchHelp>
         <div className="input-group-append">
           <button
             type="button"
-            className="input-group-text btn btn-light btn-sm"
-            onClick={clearSearchResults}
+            className="input-group-text btn btn-light btn-sm text-danger"
             title="Clear Search Results"
+            onClick={clearSearchResults}
           >
-            &nbsp;<Octicon name="x" className="text-danger" />
+            <BsX className="x-icon" />
           </button>
         </div>
-        <SearchHelp ref={searchHelpRef}>
-          <HashLink to="/about#searching" title="Search Help">
-            <Octicon name="info" className="text-muted" />
-          </HashLink>
-        </SearchHelp>
       </div>
-      <small>Lost? Why not start with these tags?</small> {tagsFragment}
+      <small>Lost? Why not start with these tags?{' '}</small>
+      <br className="d-inline d-sm-none" />
+      {tagsFragment}
     </SearchInput>
   );
 };
