@@ -21081,3 +21081,12 @@ e25554eb9776fa23c6ac7df784106a34:
     - Telegram
   nsfw: false
   original: false
+3e47a8f6268590ab05ae916ff905e362:
+  key: f3b969531c1342efdb570d8b49a00a0c93ba805e67dc7b8c584e8be65a8aa78a
+  source: 'Yara, 亞拉, https://www.facebook.com/capoocat/'
+  tags:
+    - Bugcat
+    - Capoo
+    - Bugcat Capoo
+  nsfw: false
+  original: false
